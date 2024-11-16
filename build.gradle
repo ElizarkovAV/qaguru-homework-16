@@ -1,5 +1,6 @@
 plugins {
     id "java"
+    id "io.freefair.lombok" version "8.11"
 }
 
 repositories {
@@ -10,7 +11,8 @@ dependencies {
     testImplementation (
             "org.junit.jupiter:junit-jupiter:5.11.2",
             "org.slf4j:slf4j-simple:2.0.16",
-            "io.rest-assured:rest-assured:5.5.0"
+            "io.rest-assured:rest-assured:5.5.0",
+            "io.rest-assured:json-schema-validator:5.5.0"
     )
 }
 

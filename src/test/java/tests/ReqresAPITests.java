@@ -1,5 +1,8 @@
 package tests;
 
+import models.CreateBodyModel;
+import models.CreateResponseModel;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
@@ -11,10 +14,10 @@ public class ReqresAPITests extends TestBase {
     @Test
     void successfulGetListOfUsersTest() {
         given()
-        .when()
+                .when()
                 .log().uri()
                 .get("/users")
-        .then()
+                .then()
                 .log().status()
                 .log().body()
                 .statusCode(200)
@@ -25,10 +28,10 @@ public class ReqresAPITests extends TestBase {
     @Test
     void successfulGetUserTest() {
         given()
-        .when()
+                .when()
                 .log().uri()
                 .get("/users/1")
-        .then()
+                .then()
                 .log().status()
                 .log().body()
                 .statusCode(200)
@@ -40,18 +43,22 @@ public class ReqresAPITests extends TestBase {
     @Test
     void getUserDoesNotExistTest() {
         given()
-        .when()
+                .when()
                 .log().uri()
                 .get("/users/100")
-        .then()
+                .then()
                 .log().status()
                 .statusCode(404);
     }
 
     @Test
     void successfulCreateUserTest() {
-        String data = "{\"name\": \"Artem\", \"job\": \"Test Engineer\"}";
-        given()
+
+        CreateBodyModel data = new CreateBodyModel();
+        data.setName("Artem");
+        data.setJob("Test Engineer");
+
+        CreateResponseModel response = given()
                 .body(data)
                 .contentType(JSON)
         .when()
@@ -63,7 +70,11 @@ public class ReqresAPITests extends TestBase {
                 .statusCode(201)
                 .assertThat()
                 .body("name", is("Artem"))
-                .body("job", is("Test Engineer"));
+                .body("job", is("Test Engineer"))
+                .extract()
+                .as(CreateResponseModel.class);
+
+        Assertions.assertEquals("Artem", response.getName());
     }
 
     @Test
@@ -73,10 +84,10 @@ public class ReqresAPITests extends TestBase {
         given()
                 .body(data)
                 .contentType(JSON)
-        .when()
+                .when()
                 .log().uri()
                 .post("/register")
-        .then()
+                .then()
                 .log().status()
                 .log().body()
                 .statusCode(200)
