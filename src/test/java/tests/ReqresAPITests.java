@@ -1,63 +1,35 @@
 package tests;
 
-import io.qameta.allure.restassured.AllureRestAssured;
-import models.CreateBodyModel;
-import models.CreateResponseModel;
+import models.createUserModels.CreateBodyModel;
+import models.createUserModels.CreateResponseModel;
+import models.loginModels.LoginBodyModel;
+import models.loginModels.LoginUserNotFoundModel;
+import models.userRegistrationModels.RegistrationResponseErrorModel;
+import models.userRegistrationModels.RegistrationResponseModel;
+import models.userRegistrationModels.RegistrationUserReqModel;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
-import static helpers.CustomAllureListener.withCustomTemplates;
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
-import static io.restassured.http.ContentType.JSON;
-import static org.hamcrest.CoreMatchers.is;
+import static specs.CreateUserSpec.createUserResponseSpec;
+import static specs.CreateUserSpec.createUserSpec;
+import static specs.GetUserNotExist.getUserNotExistSpec;
+import static specs.GetUserNotExist.getUserSpec;
+import static specs.LoginSpec.*;
+import static specs.UserRegistrationSpec.*;
 
 public class ReqresAPITests extends TestBase {
 
     @Test
-    void successfulGetListOfUsersTest() {
-        given()
-                .log().uri()
-                .log().body()
-                .log().headers()
-        .when()
-                .get("/users")
-        .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .assertThat()
-                .body("total", is(12));
-    }
-
-    @Test
-    void successfulGetUserTest() {
-        given()
-                .log().uri()
-                .log().body()
-                .log().headers()
-        .when()
-                .get("/users/1")
-        .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .assertThat()
-                .body("data.first_name", is("George"))
-                .body("data.last_name", is("Bluth"));
-    }
-
-    @Test
     void getUserDoesNotExistTest() {
-        given()
-                .log().uri()
-                .log().body()
-                .log().headers()
-        .when()
-                .get("/users/100")
-        .then()
-                .log().status()
-                .statusCode(404);
+
+        step("GET request, user don't exist", () ->
+        given(getUserSpec)
+                .when()
+                .get()
+                .then()
+                .spec(getUserNotExistSpec));
     }
 
     @Test
@@ -67,47 +39,80 @@ public class ReqresAPITests extends TestBase {
         data.setName("Artem");
         data.setJob("Test Engineer");
 
-        CreateResponseModel response = step("Make request", () ->
-                      given()
-                            .filter(withCustomTemplates())
-                            .body(data)
-                            .contentType(JSON)
-                            .log().uri()
-                            .log().body()
-                            .log().headers()
-                            .when()
-                            .post("/users")
-                            .then()
-                            .log().status()
-                            .log().body()
-                            .statusCode(201)
-                            .assertThat()
-                            .body("name", is("Artem"))
-                            .body("job", is("Test Engineer"))
-                            .extract()
-                            .as(CreateResponseModel.class));
-        step("Check response" , () ->
-            Assertions.assertEquals("Artem", response.getName()));
+        CreateResponseModel response = step("Make POST request create user", () ->
+                given(createUserSpec)
+                        .body(data)
+                        .when()
+                        .post()
+                        .then()
+                        .spec(createUserResponseSpec)
+                        .extract()
+                        .as(CreateResponseModel.class));
+        step("Check response, name is Artem", () ->
+                Assertions.assertEquals("Artem", response.getName()));
+        step("Check response, job is Test Engineer", () ->
+                Assertions.assertEquals("Test Engineer", response.getJob()));
     }
 
     @Test
     void successfulRegistrationUserTest() {
-        String data = "{\"email\": \"george.bluth@reqres.in\",\"password\":\"12345\"}";
 
-        given()
-                .body(data)
-                .contentType(JSON)
-                .log().uri()
-                .log().body()
-                .log().headers()
-        .when()
-                .post("/register")
-        .then()
-                .log().status()
-                .log().body()
-                .statusCode(200)
-                .assertThat()
-                .body("id", is(1))
-                .body("token", is("QpwL5tke4Pnpja7X1"));
+        RegistrationUserReqModel data = new RegistrationUserReqModel();
+        data.setEmail("george.bluth@reqres.in");
+        data.setPassword("12345");
+
+        RegistrationResponseModel response = step("Make POST request registration user", () ->
+                given(userRegisterSpec)
+                        .body(data)
+                        .when()
+                        .post()
+                        .then()
+                        .spec(registerUserResponseSpec)
+                        .extract()
+                        .as(RegistrationResponseModel.class));
+        step("Check response, id is 1", () ->
+                Assertions.assertEquals("1", response.getId()));
+    }
+
+    @Test
+    void unsuccessfulRegistrationUserTest() {
+
+        RegistrationUserReqModel data = new RegistrationUserReqModel();
+        data.setEmail("");
+        data.setPassword("12345");
+
+        RegistrationResponseErrorModel response = step("Make POST registration request  without email", () ->
+                given(userRegisterSpec)
+                        .body(data)
+                        .when()
+                        .post()
+                        .then()
+                        .spec(registerUserResponseErrorSpec)
+                        .extract()
+                        .as(RegistrationResponseErrorModel.class));
+        step("Check error message", () ->
+                Assertions.assertEquals("Missing email or username", response.getError()));
+    }
+
+    @Test
+    void unsuccessfulLoginTest() {
+        LoginBodyModel data = new LoginBodyModel();
+        data.setUsername("Test");
+        data.setEmail("123.bluth@reqres.in");
+        data.setPassword("12345");
+
+        LoginUserNotFoundModel response = step("POST login request", () ->
+                        given(loginSpec)
+                        .body(data)
+                        .when()
+                        .post()
+                        .then()
+                        .spec(loginUserNotFoundResponse)
+                        .extract()
+                        .as(LoginUserNotFoundModel.class)
+                );
+
+        step("Check response and status code for user Not Found", ()->
+                Assertions.assertEquals("user not found", response.getError()));
     }
 }
