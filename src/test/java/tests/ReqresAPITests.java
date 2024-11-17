@@ -8,6 +8,7 @@ import models.userRegistrationModels.RegistrationResponseErrorModel;
 import models.userRegistrationModels.RegistrationResponseModel;
 import models.userRegistrationModels.RegistrationUserReqModel;
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
@@ -19,6 +20,7 @@ import static specs.GetUserNotExist.getUserSpec;
 import static specs.LoginSpec.*;
 import static specs.UserRegistrationSpec.*;
 
+@Tag("ReqResAPITests")
 public class ReqresAPITests extends TestBase {
 
     @Test
