@@ -13,25 +13,21 @@ import org.junit.jupiter.api.Test;
 
 import static io.qameta.allure.Allure.step;
 import static io.restassured.RestAssured.given;
-import static specs.CreateUserSpec.createUserResponseSpec;
-import static specs.CreateUserSpec.createUserSpec;
-import static specs.GetUserNotExist.getUserNotExistSpec;
-import static specs.GetUserNotExist.getUserSpec;
-import static specs.LoginSpec.*;
-import static specs.UserRegistrationSpec.*;
+import static specs.RequestSpecs.*;
+import static specs.ResponseSpecs.*;
 
 @Tag("ReqResAPITests")
-public class ReqresAPITests extends TestBase {
+public class ReqResAPITests extends TestBase {
 
     @Test
     void getUserDoesNotExistTest() {
 
         step("GET request, user don't exist", () ->
-        given(getUserSpec)
+        given(getUserRequestSpec)
                 .when()
-                .get()
+                .get("/users/531")
                 .then()
-                .spec(getUserNotExistSpec));
+                .spec(getUserResponse404Spec));
     }
 
     @Test
@@ -42,12 +38,12 @@ public class ReqresAPITests extends TestBase {
         data.setJob("Test Engineer");
 
         CreateResponseModel response = step("Make POST request create user", () ->
-                given(createUserSpec)
+                given(postCreateUserSpec)
                         .body(data)
                         .when()
-                        .post()
+                        .post("/users")
                         .then()
-                        .spec(createUserResponseSpec)
+                        .spec(createUserResponse201Spec)
                         .extract()
                         .as(CreateResponseModel.class));
         step("Check response, name is Artem", () ->
@@ -64,12 +60,12 @@ public class ReqresAPITests extends TestBase {
         data.setPassword("12345");
 
         RegistrationResponseModel response = step("Make POST request registration user", () ->
-                given(userRegisterSpec)
+                given(postUserRegisterSpec)
                         .body(data)
                         .when()
-                        .post()
+                        .post("/register")
                         .then()
-                        .spec(registerUserResponseSpec)
+                        .spec(registerUserResponse200Spec)
                         .extract()
                         .as(RegistrationResponseModel.class));
         step("Check response, id is 1", () ->
@@ -84,12 +80,12 @@ public class ReqresAPITests extends TestBase {
         data.setPassword("12345");
 
         RegistrationResponseErrorModel response = step("Make POST registration request  without email", () ->
-                given(userRegisterSpec)
+                given(postUserRegisterSpec)
                         .body(data)
                         .when()
-                        .post()
+                        .post("/register")
                         .then()
-                        .spec(registerUserResponseErrorSpec)
+                        .spec(registerUserResponse400Spec)
                         .extract()
                         .as(RegistrationResponseErrorModel.class));
         step("Check error message", () ->
@@ -104,12 +100,12 @@ public class ReqresAPITests extends TestBase {
         data.setPassword("12345");
 
         LoginUserNotFoundModel response = step("POST login request", () ->
-                        given(loginSpec)
+                        given(postLoginSpec)
                         .body(data)
                         .when()
-                        .post()
+                        .post("/login")
                         .then()
-                        .spec(loginUserNotFoundResponse)
+                        .spec(loginUserResponse400Spec)
                         .extract()
                         .as(LoginUserNotFoundModel.class)
                 );
